@@ -1,12 +1,9 @@
 #!/bin/bash
 
 current_directory="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-hosts_path="/etc/hosts"
-vhosts_path="/etc/httpd/conf/vhosts/"
-web_root="/home"
-# hosts_path="/etc/hosts2"
-# vhosts_path="/etc/apache2/extra/"
-# web_root="/Users/kraymond/home"
+hosts_path="/path/to/hosts"
+vhosts_path="/path/to/vhosts/"
+web_root="/path/to/home"
 
 NONE='\033[00m'
 RED='\033[01;31m'
