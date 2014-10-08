@@ -51,6 +51,15 @@ validate_parent_exists () {
   fi
 }
 
+validate_domain_syntax () {
+  if [[ $site_url =~ ^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\.[a-zA-Z]{2,}$ ]]; then
+    return 0
+  else
+    echo -e "${RED}Invalid domain name. Please try again${NONE}"
+    exit 2
+  fi
+}
+
 directory_exists () {
   if [ -d "$1" ]; then
     echo -e "${YELLOW}Directory ($1) already exists.${NONE} skipping..."
@@ -152,7 +161,7 @@ build_vhost_config () {
 append_to_host () {
   if file_exists "$hosts_path"; then
     echo ""
-    echo "Appending $domain to $hosts_path file"
+    echo -e "${CYAN}Appending $domain to $hosts_path file${NONE}"
     echo "" >> $hosts_path
     echo "127.0.0.1    $domain" >> $hosts_path
   else
@@ -273,6 +282,16 @@ select_environment () {
 }
 
 
+create_database () {
+  MYSQL=`which mysql`
+  q1="CREATE DATABASE IF NOT EXISTS $db_name;"
+  q2="GRANT ALL ON *.* TO '$db_user'@'localhost' IDENTIFIED BY '$db_pass';"
+  q2="FLUSH PRIVILEGES;"
+  sql="$q1 $q2 $q3"
+
+  $MYSQL -u root -p -e "$sql"
+}
+
 
 
 
@@ -319,6 +338,9 @@ if is_subdomain; then
     read -p "Enter parent domain: " parent
   fi
   validate_parent_exists
+  echo -e "You will now be prompted for your ${CYAN}subdomain name${NONE}"
+  echo -e "This is only the name, so enter ${CYAN}subdomain${NONE} and it will be saved as ${CYAN}subdomain.$parent${NONE}"
+  echo ""
   read -p "Please enter the desired subdomain: " site_url
 
   if [ $relative_doc_root == 0 ]; then
@@ -333,6 +355,7 @@ else
     echo -e "Please don't forget the top-level domain (ex: .com)"
     echo ""
     read -p "Please enter the desired URL: " site_url
+    validate_domain_syntax
   fi
 
   if [ $relative_doc_root == 0 ]; then
@@ -397,6 +420,27 @@ create_file_structure
 #     Restart Apache                  #
 ###                                 ###
 restart_apache
+
+
+###                                 ###
+#   STEP 9:                           #
+#     Create MySQL db                 #
+###                                 ###
+read -p "Does $domain require a MySQL DB? [Yn] " needs_db
+if [ $needs_db == "Y" ]; then
+  read -p "Please enter database name: " db_name
+  read -p "Please enter database user: " db_user
+  read -p "Please enter database password: " db_pass
+  create_database
+else
+  echo "Skipping MySQL Database"
+fi
+
+
+###                                 ###
+#   STEP 10:                          #
+#     Close out script                #
+###                                 ###
 echo ""
 echo -e "${CYAN}New Domain: $site_url successfully setup${NONE}"
 exit 2
