@@ -1,6 +1,7 @@
 #!/bin/bash
 
 current_directory="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
 hosts_path="/path/to/hosts"
 vhosts_path="/path/to/vhosts/"
 web_root="/path/to/home"
@@ -141,11 +142,19 @@ build_vhost_config () {
   echo ""                                  >> $vhost
   echo ""                                  >> $vhost
   echo "<VirtualHost *:80>"                >> $vhost
-  echo "  DocumentRoot $absolute_doc_root" >> $vhost
+  if is_rails; then
+    echo "  DocumentRoot $absolute_doc_root/public" >> $vhost
+  else
+    echo "  DocumentRoot $absolute_doc_root" >> $vhost
+  fi
   echo "  ServerName $domain"              >> $vhost
   echo "  ServerAlias www.$domain"         >> $vhost
   echo ""                                  >> $vhost
-  echo "  <Directory $absolute_doc_root>"  >> $vhost
+  if is_rails; then
+    echo "  <Directory $absolute_doc_root/public>"  >> $vhost
+  else
+    echo "  <Directory $absolute_doc_root>"  >> $vhost
+  fi
   echo "    Options Indexes FollowSymLinks MultiViews" >> $vhost
   echo "    AllowOverride All"             >> $vhost
   echo "    Allow from All"                >> $vhost
@@ -225,7 +234,7 @@ create_file_structure () {
   echo "<html><head></head><body>Welcome!</body></html>" >> "$indexfile"
 
   `chown -R $linux_user:$linux_group "$absolute_doc_root/"`
-  `usermod -d $absolute_doc_root $linux_user`
+  if ! $ret; then `usermod -d $absolute_doc_root $linux_user`; fi
   echo -e "${CYAN}Structure successfully created${NONE}"
   tree $absolute_doc_root
 }
@@ -286,10 +295,11 @@ create_database () {
   MYSQL=`which mysql`
   q1="CREATE DATABASE IF NOT EXISTS $db_name;"
   q2="GRANT ALL ON *.* TO '$db_user'@'localhost' IDENTIFIED BY '$db_pass';"
-  q2="FLUSH PRIVILEGES;"
+  q3="FLUSH PRIVILEGES;"
   sql="$q1 $q2 $q3"
 
   $MYSQL -u root -p -e "$sql"
+  echo -e "${CYAN}Database $db_name created with user $db_user${NONE}"
 }
 
 
