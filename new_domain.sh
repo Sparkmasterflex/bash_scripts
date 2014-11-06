@@ -6,6 +6,7 @@ hosts_path="/path/to/hosts"
 vhosts_path="/path/to/vhosts/"
 web_root="/path/to/home"
 
+
 NONE='\033[00m'
 RED='\033[01;31m'
 YELLOW='\033[01;33m'
@@ -143,17 +144,17 @@ build_vhost_config () {
   echo ""                                  >> $vhost
   echo "<VirtualHost *:80>"                >> $vhost
   if is_rails; then
-    echo "  DocumentRoot $absolute_doc_root/public" >> $vhost
+    echo "  DocumentRoot $absolute_doc_root/httpdocs/public" >> $vhost
   else
-    echo "  DocumentRoot $absolute_doc_root" >> $vhost
+    echo "  DocumentRoot $absolute_doc_root/httpdocs" >> $vhost
   fi
   echo "  ServerName $domain"              >> $vhost
   echo "  ServerAlias www.$domain"         >> $vhost
   echo ""                                  >> $vhost
   if is_rails; then
-    echo "  <Directory $absolute_doc_root/public>"  >> $vhost
+    echo "  <Directory $absolute_doc_root/httpdocs/public>"  >> $vhost
   else
-    echo "  <Directory $absolute_doc_root>"  >> $vhost
+    echo "  <Directory $absolute_doc_root/httpdocs>"  >> $vhost
   fi
   echo "    Options Indexes FollowSymLinks MultiViews" >> $vhost
   echo "    AllowOverride All"             >> $vhost
